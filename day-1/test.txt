@@ -1,0 +1,32 @@
+sum 0
+check past 0
+check for  one in sxoneightoneckk9ldctxxnffqnzmjqvj
+found at 2
+new line sxo1eoneightoneckk9ldctxxnffqnzmjqvj
+check past 6
+check for  one in neightoneckk9ldctxxnffqnzmjqvj
+found at 6
+new line sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 16
+check for  one in neckk9ldctxxnffqnzmjqvj
+check past 0
+check for  two in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  three in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  four in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  five in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  six in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  seven in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  eight in sxo1eoo1eneightoneckk9ldctxxnffqnzmjqvj
+found at 10
+new line sxo1eoo1ene8teightoneckk9ldctxxnffqnzmjqvj
+check past 14
+check for  eight in ightoneckk9ldctxxnffqnzmjqvj
+check past 0
+check for  nine in sxo1eoo1ene8teightoneckk9ldctxxnffqnzmjqvj
+d sxo1eoo1ene8teightoneckk9ldctxxnffqnzmjqvj
