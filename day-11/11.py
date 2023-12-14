@@ -62,24 +62,25 @@ class TestParseInput(unittest.TestCase):
             Coordinates(1,0)
         ]))
 
-def get_expanded_universe(universe: Universe) -> Universe:
+def get_expanded_universe(universe: Universe, expansion_factor: int) -> Universe:
+    if (expansion_factor <= 0):
+        raise ValueError('expansion_factor must be 1 or greater')
+
     # track all columns
     [empty_rows, empty_columns] = find_empty_rows_and_columns(universe)
+    new_galaxies = set([])
+    
 
-    list_of_empty_rows = list(empty_rows)
-    list_of_empty_rows.sort(reverse=True)
-    for r in list_of_empty_rows:
-        universe_width = len(universe.image[0])
-        new_matrix = insert_element_at_index(universe.image, '.' * universe_width, r + 1)
-        universe.image = insert_element_at_index(universe.image, '.' * universe_width, r + 1)
+    for galaxy in universe.galaxies:
+        empty_cols_left_of_galaxy = len([num for num in empty_columns if num < galaxy.x])
+        empty_rows_above_galaxy = len([num for num in empty_rows if num < galaxy.y])
 
-    list_of_empty_columns = list(empty_columns)
-    list_of_empty_columns.sort(reverse=True)
-    for c in list_of_empty_columns:
-        for r in range(len(universe.image)):
-            universe.image[r] = universe.image[r][:c] + '.' + universe.image[r][c:]
+        new_x = empty_cols_left_of_galaxy * (expansion_factor - 1) + galaxy.x
+        new_y = empty_rows_above_galaxy * (expansion_factor - 1) + galaxy.y
 
-    return parse_universe(universe.image) 
+        new_galaxies.add(Coordinates(new_x, new_y))
+
+    return Universe(universe.image, new_galaxies) 
 
 
 class TestGetExpandedUniverse(unittest.TestCase):
@@ -88,17 +89,14 @@ class TestGetExpandedUniverse(unittest.TestCase):
             '.'
         ]
         universe = parse_universe(lines)
-        universe = get_expanded_universe(universe)
-        self.assertEqual(universe.image, [
-            '..',
-            '..'
-        ])
+        universe = get_expanded_universe(universe, 2)
+        self.assertEqual(universe.galaxies, set([]))
         lines = ['#']
         universe = parse_universe(lines)
-        universe = get_expanded_universe(universe)
-        self.assertEqual(universe.image, [
-            '#',
-        ])
+        universe = get_expanded_universe(universe, 2)
+        self.assertEqual(universe.galaxies, set([
+            Coordinates(0,0)
+        ]))
 
     def testComplexUniverse(self):
         lines = [
@@ -107,17 +105,12 @@ class TestGetExpandedUniverse(unittest.TestCase):
             '...'
         ]
         universe = parse_universe(lines)
-        universe = get_expanded_universe(universe)
-        self.assertEqual(universe.image, [
-            '..#.',
-            '...#',
-            '....',
-            '....'
-        ])
+        universe = get_expanded_universe(universe, 2)
         self.assertEqual(universe.galaxies, set([
             Coordinates(2,0),
             Coordinates(3,1)
         ]))
+
 
     def testExampleUniverse(self): 
         lines = [
@@ -133,21 +126,7 @@ class TestGetExpandedUniverse(unittest.TestCase):
 			'#...#.....'
         ]
         universe = parse_universe(lines)
-        universe = get_expanded_universe(universe)
-        self.assertEqual(universe.image, [
-			'....#........',
-			'.........#...',
-			'#............',
-			'.............',
-			'.............',
-			'........#....',
-			'.#...........',
-			'............#',
-			'.............',
-			'.............',
-			'.........#...',
-			'#....#.......'
-        ])
+        universe = get_expanded_universe(universe,2)
         self.assertEqual(universe.galaxies, set([
             Coordinates(4,0),
             Coordinates(9,1),
@@ -246,8 +225,16 @@ class TestFindDistanceBetweenAllGalaxies(unittest.TestCase):
 
     def testExampleUniverse(self):
         lines = read_input('example-input.txt')
-        expanded_universe = distance_between_all_galaxies(get_expanded_universe(parse_universe(lines)))
+        expanded_universe = distance_between_all_galaxies(get_expanded_universe(parse_universe(lines), 2))
         self.assertEqual(expanded_universe, 374)
+        expanded_universe = distance_between_all_galaxies(get_expanded_universe(parse_universe(lines), 10))
+        self.assertEqual(expanded_universe, 1030)
+        expanded_universe = distance_between_all_galaxies(get_expanded_universe(parse_universe(lines), 100))
+        self.assertEqual(expanded_universe, 8410)
+        lines = read_input('input.txt')
+        expanded_universe = distance_between_all_galaxies(get_expanded_universe(parse_universe(lines), 2))
+        self.assertEqual(expanded_universe, 10494813)
+        
 
 
 def insert_element_at_index(arr: List, el, i: int) -> List:
@@ -288,11 +275,12 @@ class TestRemoveElement(unittest.TestCase):
         self.assertEqual(arr, [1,2,3])
 
 
-unittest.main()
-'''
+#unittest.main()
+#if __name__ == '__main__':
+#        unittest.main(testRunner=unittest.TextTestRunner(), argv=['', 'TestGetExpandedUniverse.testComplexUniverse'])
+
 lines = read_input('input.txt')
 universe = parse_universe(lines)
-expanded_universe = get_expanded_universe(universe)
+expanded_universe = get_expanded_universe(universe, 1000000)
 print('shortest path')
 print(distance_between_all_galaxies(expanded_universe))
-'''
