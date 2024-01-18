@@ -1,5 +1,5 @@
 """
-date:: 2024.01.17
+date: 2024.01.17
 author: @adambechtold
 interviewer: @badr-elmazaz
 whiteboard: https://link.excalidraw.com/l/ATbTqvQ19d9/Wtb1HnEZNT
