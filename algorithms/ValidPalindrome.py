@@ -28,6 +28,7 @@ Since an empty string reads the same forward and backward, it is a palindrome.
 author: adambechtold
 date: 2024.01.26 
 link: https://leetcode.com/problems/valid-palindrome/
+difficulty: easy
 
 Result:
     Runtime: 36 - beats 97
