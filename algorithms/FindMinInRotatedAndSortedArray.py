@@ -1,3 +1,5 @@
+from typing import List
+
 """
 Find the Minimum Value in a Sorted, Rotated Array
 
