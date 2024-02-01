@@ -7,6 +7,7 @@ author: adambechtold
 link: https://leetcode.com/problems/lru-cache/
 difficulty: medium
 whiteboard: https://link.excalidraw.com/l/ATbTqvQ19d9/fISzrI9sul
+date: 2024.01.31
 """
 
 """
