@@ -1,11 +1,5 @@
 # CyberChallenge.IT 2023 - Programming Test
 
-Date: 31/01/2024
-
-Difficulty: Medium
-
-Status: Solved
-
 ## Problem 2 - “Who’s the winner?” [60 points]
 
 The local selection of the CyberChallenge.IT program is an individual CTF competition in jeopardy-style.
