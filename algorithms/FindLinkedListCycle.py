@@ -13,6 +13,8 @@ difficulty: easy
 #         self.val = x
 #         self.next = None
 
+# Runtime: Beats 97%
+# Memory: Beats 83%
 class Solution:
     def hasCycle(self, head: Optional[ListNode]) -> bool:
         slow_pointer, fast_pointer = head, head
