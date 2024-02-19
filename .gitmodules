@@ -1,0 +1,3 @@
+[submodule "project-euler"]
+	path = project-euler
+	url = git@github.com:adambechtold/project-euler.git
