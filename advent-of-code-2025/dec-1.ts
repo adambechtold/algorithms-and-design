@@ -1,16 +1,21 @@
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "jsr:@std/assert";
+
+// Diagram: https://www.tldraw.com/f/SCuT_cSxjvfIQaZoTQVhW?d=v2765.4390.1840.1074.SLsar4eMDHcnZCw3QuU06
 
 type RotationDirection = "R" | "L";
-type RotationInstruction = `${RotationDirection}${number}`;
+type RotationInstructionString = `${RotationDirection}${number}`;
+type RotationInstrution = { direction: RotationDirection; distance: number };
 
-type DecisionContext = {
+// === Counting Strategies ===
+type CountContext = {
   before: number;
   after: number;
-  instruction: RotationInstruction;
+  instruction: RotationInstructionString;
 };
-type CountDecisionFn = (arg: DecisionContext) => number;
+type CountDecisionFn = (arg: CountContext) => number;
 
-const traveledToZero: CountDecisionFn = (ctx: DecisionContext) => {
+// -- Landed on Zero ---
+const traveledToZero: CountDecisionFn = (ctx: CountContext) => {
   if (ctx.before === 0) return 0;
   return ctx.after === 0 ? 1 : 0;
 };
@@ -23,7 +28,8 @@ assertEquals(traveledToZero({ before: 1, after: -1, instruction: "L2" }), 0);
 assertEquals(traveledToZero({ before: -1, after: 0, instruction: "R1" }), 1);
 assertEquals(traveledToZero({ before: 1, after: 0, instruction: "L1" }), 1);
 
-const timesPastZero: CountDecisionFn = (ctx: DecisionContext) => {
+// --- Times Past Zero or Landed on Zero ---
+const timesPastZeroOrLandedOnZero: CountDecisionFn = (ctx: CountContext) => {
   const { after, before, instruction } = ctx;
 
   const { distance, direction } = parseInstructionIntoNumber(instruction);
@@ -44,48 +50,94 @@ const timesPastZero: CountDecisionFn = (ctx: DecisionContext) => {
     }
   }
 
-  console.log({ before, after, instruction, count });
   return count;
 };
 
 assertEquals(
-  timesPastZero({ before: 50, after: 51, instruction: "R1" }),
+  timesPastZeroOrLandedOnZero({ before: 50, after: 51, instruction: "R1" }),
   0,
 );
-assertEquals(timesPastZero({ before: 1, after: 0, instruction: "L1" }), 1);
-assertEquals(timesPastZero({ before: 99, after: 0, instruction: "R1" }), 1);
-assertEquals(timesPastZero({ before: 0, after: 0, instruction: "R0" }), 0);
-assertEquals(timesPastZero({ before: 0, after: 1, instruction: "R1" }), 0);
-assertEquals(timesPastZero({ before: 0, after: 99, instruction: "L1" }), 0);
-
-assertEquals(timesPastZero({ before: 1, after: 99, instruction: "L2" }), 1);
-assertEquals(timesPastZero({ before: 99, after: 1, instruction: "R2" }), 1);
-
-assertEquals(timesPastZero({ before: 99, after: 99, instruction: "R100" }), 1);
-assertEquals(timesPastZero({ before: 10, after: 10, instruction: "L100" }), 1);
-
-assertEquals(timesPastZero({ before: 99, after: 0, instruction: "R101" }), 2);
-assertEquals(timesPastZero({ before: 99, after: 1, instruction: "R102" }), 2);
-
-assertEquals(timesPastZero({ before: 1, after: 0, instruction: "L101" }), 2);
-assertEquals(timesPastZero({ before: 1, after: 99, instruction: "L102" }), 2);
-
-// Examples
-assertEquals(timesPastZero({ before: 52, after: 0, instruction: "R48" }), 1);
-assertEquals(timesPastZero({ before: 95, after: 50, instruction: "R60" }), 1);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 1, after: 0, instruction: "L1" }),
+  1,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 99, after: 0, instruction: "R1" }),
+  1,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 0, after: 0, instruction: "R0" }),
+  0,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 0, after: 1, instruction: "R1" }),
+  0,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 0, after: 99, instruction: "L1" }),
+  0,
+);
 
 assertEquals(
-  timesPastZero({ before: 50, after: 50, instruction: "R1000" }),
+  timesPastZeroOrLandedOnZero({ before: 1, after: 99, instruction: "L2" }),
+  1,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 99, after: 1, instruction: "R2" }),
+  1,
+);
+
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 99, after: 99, instruction: "R100" }),
+  1,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 10, after: 10, instruction: "L100" }),
+  1,
+);
+
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 99, after: 0, instruction: "R101" }),
+  2,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 99, after: 1, instruction: "R102" }),
+  2,
+);
+
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 1, after: 0, instruction: "L101" }),
+  2,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 1, after: 99, instruction: "L102" }),
+  2,
+);
+
+// Examples
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 52, after: 0, instruction: "R48" }),
+  1,
+);
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 95, after: 50, instruction: "R60" }),
+  1,
+);
+
+assertEquals(
+  timesPastZeroOrLandedOnZero({ before: 50, after: 50, instruction: "R1000" }),
   10,
 );
 
-function solve(s: string, fn: CountDecisionFn): number {
+// === Solve Puzzle ===
+function solveFromString(s: string, fn: CountDecisionFn): number {
   const instructions = parseInput(s);
   return getPassword(50, instructions, fn);
 }
 
+// Part 1
 assertEquals(
-  solve(
+  solveFromString(
     `L68
 L30
 R48
@@ -101,9 +153,9 @@ L82`,
   3,
 );
 
-console.log("example");
+// Part 2
 assertEquals(
-  solve(
+  solveFromString(
     `L68
 L30
 R48
@@ -114,14 +166,14 @@ L1
 L99
 R14
 L82`,
-    timesPastZero,
+    timesPastZeroOrLandedOnZero,
   ),
   6,
 );
 
 function getPassword(
   initialPosition: number,
-  instructions: RotationInstruction[],
+  instructions: RotationInstructionString[],
   countIncrementFn: CountDecisionFn,
 ) {
   let currentPosition = initialPosition;
@@ -137,9 +189,10 @@ function getPassword(
   return count;
 }
 
+// --- Rotate Dial --
 function rotateDial(
   position: number,
-  instruction: RotationInstruction,
+  instruction: RotationInstructionString,
   numberOfSafePositions: number = 100,
 ): number {
   const { distance } = parseInstructionIntoNumber(instruction);
@@ -164,8 +217,9 @@ assertEquals(rotateDial(5, "L10"), 95);
 assertEquals(rotateDial(10, "L5"), 5);
 assertEquals(rotateDial(10, "L10"), 0);
 
+// === Parsers ===
 function parseInstructionIntoNumber(
-  instruction: RotationInstruction,
+  instruction: RotationInstructionString,
 ): { direction: RotationDirection; distance: number } {
   const value = Number(instruction.slice(1));
   const isPositive = instruction.startsWith("R");
@@ -173,7 +227,7 @@ function parseInstructionIntoNumber(
   return {
     direction: isPositive ? "R" : "L",
     distance: isPositive ? value : -1 * value,
-  };
+  } as RotationInstrution;
 }
 
 assertEquals(parseInstructionIntoNumber("L0"), { direction: "L", distance: 0 });
@@ -192,7 +246,7 @@ assertEquals(parseInstructionIntoNumber("R10"), {
   distance: 10,
 });
 
-function parseInput(s: string): RotationInstruction[] {
+function parseInput(s: string): RotationInstructionString[] {
   const strings = s.split("\n");
 
   const instructions = strings.filter(isValidInstruction);
@@ -207,41 +261,21 @@ function parseInput(s: string): RotationInstruction[] {
   return instructions;
 }
 
-/*
-function passedOverZero(before: number, after: number) {
-  if (before === 0 || after === 0) return false;
-
-  const isBeforePositive = before > 0;
-  const isAfterPositive = after > 0;
-
-  if (isBeforePositive && !isAfterPositive) return true;
-  if (!isBeforePositive && isAfterPositive) return true;
-
-  return false;
-}
-
-assertEquals(passedOverZero(1, 2), false);
-assertEquals(passedOverZero(0, 0), false);
-assertEquals(passedOverZero(0, 1), false);
-assertEquals(passedOverZero(-1, 0), false);
-
-assertEquals(passedOverZero(-1, 1), true);
-assertEquals(passedOverZero(-1, 10), true);
-assertEquals(passedOverZero(-2, -1), false);
-assertEquals(passedOverZero(-1, -2), false);
-*/
-
-function isValidInstruction(s: string): s is RotationInstruction {
+function isValidInstruction(s: string): s is RotationInstructionString {
   if (s.length < 2) return false;
 
   const firstLetter = s[0];
   if (firstLetter !== "R" && firstLetter !== "L") return false;
 
-  const value = parseInstructionIntoNumber(s as RotationInstruction);
+  const value = parseInstructionIntoNumber(s as RotationInstructionString);
   if (Number.isNaN(value)) return false;
 
   return true;
 }
 
-console.log(solve(Deno.readTextFileSync("dec-1.txt"), timesPastZero));
-
+console.log(
+  solveFromString(
+    Deno.readTextFileSync("dec-1.txt"),
+    timesPastZeroOrLandedOnZero,
+  ),
+);
