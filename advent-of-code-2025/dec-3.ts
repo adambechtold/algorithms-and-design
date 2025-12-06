@@ -27,19 +27,34 @@ assertEquals(findFirstMaxEntryOrThrow([2, 2, 9]), { index: 2, value: 9 });
 
 type JoltageBank = number[];
 
-function findMaxJoltage(bank: JoltageBank): number {
-  const tensPlace = findFirstMaxEntryOrThrow(bank.slice(0, -1));
-  const onesPlace = findFirstMaxEntryOrThrow(bank.slice(tensPlace.index + 1));
+function findMaxJoltage(bank: JoltageBank, numberOfBatteries: number): number {
+  let value = 0;
+  let earliestAllowedIndex = 0;
 
-  return (tensPlace.value * 10) + onesPlace?.value;
+  for (let i = numberOfBatteries; i > 0; i--) {
+    const lastAllowedIndex = bank.length - i;
+    const validBatteries = bank.slice(
+      earliestAllowedIndex,
+      lastAllowedIndex + 1,
+    );
+    const largestBattery = findFirstMaxEntryOrThrow(
+      validBatteries,
+    );
+    earliestAllowedIndex = earliestAllowedIndex + largestBattery.index + 1;
+    value = value * 10 + largestBattery.value;
+  }
+
+  return value;
 }
 
-assertEquals(findMaxJoltage([1, 1]), 11);
-assertEquals(findMaxJoltage([2, 1]), 21);
-assertEquals(findMaxJoltage([1, 2]), 12);
-assertEquals(findMaxJoltage([9, 9, 8, 8]), 99);
-assertEquals(findMaxJoltage([9, 8, 8, 9]), 99);
-assertEquals(findMaxJoltage([1, 8, 8, 9]), 89);
+assertEquals(findMaxJoltage([1, 1], 1), 1);
+assertEquals(findMaxJoltage([1, 1], 2), 11);
+assertEquals(findMaxJoltage([2, 1], 2), 21);
+assertEquals(findMaxJoltage([1, 2], 2), 12);
+assertEquals(findMaxJoltage([9, 9, 8, 8], 2), 99);
+assertEquals(findMaxJoltage([9, 8, 8, 9], 2), 99);
+assertEquals(findMaxJoltage([1, 8, 8, 9], 2), 89);
+assertEquals(findMaxJoltage([1, 8, 8, 9], 3), 889);
 assertEquals(
   findMaxJoltage([
     9,
@@ -57,7 +72,7 @@ assertEquals(
     1,
     1,
     1,
-  ]),
+  ], 2),
   98,
 );
 assertEquals(
@@ -77,7 +92,7 @@ assertEquals(
     1,
     1,
     9,
-  ]),
+  ], 2),
   89,
 );
 assertEquals(
@@ -97,7 +112,7 @@ assertEquals(
     2,
     7,
     8,
-  ]),
+  ], 2),
   78,
 );
 assertEquals(
@@ -117,94 +132,91 @@ assertEquals(
     1,
     1,
     1,
-  ]),
+  ], 2),
   92,
 );
 
-function solve(joltageBanks: JoltageBank[]) {
+function solve(joltageBanks: JoltageBank[], numberOfBatteries: number): number {
   let sum = 0;
   for (const bank of joltageBanks) {
-    sum += findMaxJoltage(bank);
+    sum += findMaxJoltage(bank, numberOfBatteries);
   }
   return sum;
 }
 
-assertEquals(solve([[1, 1], [2, 2]]), 33);
-assertEquals(
-  solve(
-    [
-      [
-        9,
-        8,
-        7,
-        6,
-        5,
-        4,
-        3,
-        2,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-      ],
-      [
-        8,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        9,
-      ],
-      [
-        2,
-        3,
-        4,
-        2,
-        3,
-        4,
-        2,
-        3,
-        4,
-        2,
-        3,
-        4,
-        2,
-        7,
-        8,
-      ],
-      [
-        8,
-        1,
-        8,
-        1,
-        8,
-        1,
-        9,
-        1,
-        1,
-        1,
-        1,
-        2,
-        1,
-        1,
-        1,
-      ],
-    ],
-  ),
-  357,
-);
+assertEquals(solve([[1, 1], [2, 2]], 2), 33);
+const exampleInput: JoltageBank[] = [
+  [
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+  ],
+  [
+    8,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    9,
+  ],
+  [
+    2,
+    3,
+    4,
+    2,
+    3,
+    4,
+    2,
+    3,
+    4,
+    2,
+    3,
+    4,
+    2,
+    7,
+    8,
+  ],
+  [
+    8,
+    1,
+    8,
+    1,
+    8,
+    1,
+    9,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+  ],
+];
+assertEquals(solve(exampleInput, 2), 357);
+assertEquals(solve(exampleInput, 12), 3121910778619);
 
 function parseStringIntoJoltageBank(s: string) {
   return s.split("").map(Number);
@@ -218,4 +230,4 @@ function parseTextFile(fileName: string): JoltageBank[] {
   return s.split("\n").map(parseStringIntoJoltageBank);
 }
 
-console.log(solve(parseTextFile("dec-3.txt")));
+console.log(solve(parseTextFile("dec-3.txt"), 12));
