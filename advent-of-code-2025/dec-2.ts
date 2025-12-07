@@ -19,7 +19,7 @@ function isInvalidIdSplitLength(id: string, partitionSize: number): boolean {
   const canBeSplitIntoEvenChunks = id.length % partitionSize === 0;
   if (!canBeSplitIntoEvenChunks) return false;
 
-const isPartitionSizeMoreThanHalfOfLength = partitionSize > (id.length / 2)
+  const isPartitionSizeMoreThanHalfOfLength = partitionSize > (id.length / 2);
   if (isPartitionSizeMoreThanHalfOfLength) return false;
 
   const chunks = chunkString(id, partitionSize);
@@ -40,7 +40,7 @@ assertEquals(isInvalidIdSplitLength("aaaa", 1), true);
 assertEquals(isInvalidIdSplitLength("12", 1), false);
 assertEquals(isInvalidIdSplitLength(String(12), 1), false);
 
-assertEquals(isInvalidIdSplitLength("38593859", 4), true)
+assertEquals(isInvalidIdSplitLength("38593859", 4), true);
 
 function chunkString(s: string, size: number) {
   const r: string = [];
@@ -120,8 +120,11 @@ function sumInvalidIdsInRangePartitioned(range: IdRange): number {
 
 assertEquals(sumInvalidIdsInRangePartitioned([11, 22]), 33);
 assertEquals(sumInvalidIdsInRangePartitioned([95, 115]), 210);
-assertEquals(sumInvalidIdsInRangePartitioned([824824821, 824824827]), 824824824)
-assertEquals(sumInvalidIdsInRangePartitioned( [ 38593856, 38593862 ]), 38593859)
+assertEquals(
+  sumInvalidIdsInRangePartitioned([824824821, 824824827]),
+  824824824,
+);
+assertEquals(sumInvalidIdsInRangePartitioned([38593856, 38593862]), 38593859);
 
 // Solve Puzzle
 function solve(s: string, sumInvalidIdsFn: (range: IdRange) => number): number {
@@ -144,7 +147,7 @@ assertEquals(
   1227775554,
 );
 
-console.log('solve')
+console.log("solve");
 assertEquals(
   solve(
     "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124",
@@ -153,4 +156,6 @@ assertEquals(
   4174379265,
 );
 
-console.log(solve(Deno.readTextFileSync("dec-2.txt"), sumInvalidIdsInRangePartitioned));
+console.log(
+  solve(Deno.readTextFileSync("dec-2.txt"), sumInvalidIdsInRangePartitioned),
+);
