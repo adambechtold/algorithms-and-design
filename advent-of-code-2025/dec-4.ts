@@ -88,6 +88,55 @@ function countPickablePaperTowels(floor: CafeteriaFloor) {
   return count;
 }
 
+function pickUpAllPaperTowels(floor: CafeteriaFloor) {
+  let totalNumTowelsRemoved = 0;
+  let towelsRemovedThisIteration = 0;
+  let currentFloorState = copyFloor(floor);
+  do {
+    towelsRemovedThisIteration = 0;
+    currentFloorState = copyFloor(currentFloorState);
+
+    for (let y = 0; y < currentFloorState.length; y++) {
+      for (let x = 0; x < currentFloorState[0].length; x++) {
+        const contentsAtPosition = getAtGridPosition(currentFloorState, {
+          x,
+          y,
+        });
+        if (contentsAtPosition !== "@") continue;
+        const towelCount = numberOfSurroundingTowels(currentFloorState, {
+          x,
+          y,
+        });
+        if (towelCount < 4) {
+          towelsRemovedThisIteration++;
+          totalNumTowelsRemoved++;
+          currentFloorState[y][x] = ".";
+        }
+      }
+    }
+  } while (towelsRemovedThisIteration > 0);
+
+  return totalNumTowelsRemoved;
+}
+
+function copyFloor(floor: CafeteriaFloor) {
+  const newFloor: CafeteriaFloor = [];
+  for (const row of floor) {
+    const newRow: CafeteriaFloor[number] = [];
+    for (const tile of row) {
+      newRow.push(tile);
+    }
+    newFloor.push(newRow);
+  }
+  return newFloor;
+}
+
+function _printFloor(floor: CafeteriaFloor) {
+  console.log(
+    floor.map((row) => row.join("")).join("\n"),
+  );
+}
+
 const exampleInput = `..@@.@@@@.
 @@@.@.@.@@
 @@@@@.@.@@
@@ -108,9 +157,13 @@ assertEquals(
   countPickablePaperTowels(parseStringIntoCafeteriaFloor(exampleInput)),
   13,
 );
+assertEquals(
+  pickUpAllPaperTowels(parseStringIntoCafeteriaFloor(exampleInput)),
+  43,
+);
 
 console.log(
-  countPickablePaperTowels(
+  pickUpAllPaperTowels(
     parseStringIntoCafeteriaFloor(Deno.readTextFileSync("dec-4.txt")),
   ),
 );
