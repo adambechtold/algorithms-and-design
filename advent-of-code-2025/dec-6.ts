@@ -51,10 +51,62 @@ assertEqualsUnordered(assembleEquations(["+", "*"], [[1, 4], [2, 5]]), [[
   5,
 ]]);
 
+function parseNumberRowsHuman(numberRows: string[]) {
+  return numberRows.map(parseNumbersRow);
+}
+
 function parseNumbersRow(s: string): number[] {
   return s.trim().split(/\s+/).filter(Boolean).map(Number);
 }
 assertEquals(parseNumbersRow("1  2"), [1, 2]);
+
+function rotate90(text: string): string {
+  const lines = text.split("\n");
+  const height = lines.length;
+  const width = Math.max(...lines.map((line) => line.length));
+
+  const paddedLines = lines.map((line) => line.padEnd(width, " "));
+
+  // Rotate 90 degrees clockwise
+  const result: string[] = [];
+  for (let col = 0; col < width; col++) {
+    let newLine = "";
+    for (let row = height - 1; row >= 0; row--) {
+      newLine += paddedLines[row][col];
+    }
+    result.push(newLine);
+  }
+
+  return result.join("\n");
+}
+
+function parseEquationsAsCephalopod(s: string) {
+  return rotate90(s).split(/(?=[+*])/)
+    .filter((part) => part.trim())
+    .map((part) => {
+      const op = part[0] as "+" | "*";
+      const numbers = part.slice(1)
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((numStr) => Array.from(numStr).reverse().join(""))
+        .map(Number);
+      return [op, ...numbers] as Equation;
+    });
+}
+
+function buildValueFromDigits(digits: number[]): number {
+  if (!digits.length) throw new Error(`Cannot provide digits ${digits}`);
+  let result = digits[0];
+  digits.slice(1).forEach((value) => {
+    result = result * 10 + value;
+  });
+  return result;
+}
+
+assertEquals(buildValueFromDigits([1]), 1);
+assertEquals(buildValueFromDigits([1, 0]), 10);
+assertEquals(buildValueFromDigits([0, 9]), 9);
+assertEquals(buildValueFromDigits([8, 9]), 89);
 
 type MultiplyOperationSymbol = "*";
 type AddOperationSymbol = "+";
@@ -78,11 +130,11 @@ function isEquation(a: unknown): a is Equation {
   return true;
 }
 
-function parseInputString(s: string): Equation[] {
+function parseInputStringHuman(s: string): Equation[] {
   const lines = s.split("\n");
   console.log(lines);
   const operations = parseOperationRow(lines.slice(-1)[0]);
-  const numberRows = lines.slice(0, -1).map(parseNumbersRow);
+  const numberRows = parseNumberRowsHuman(lines.slice(0, -1)) as number[][];
 
   if (!operations.every(isOperationSymbol)) {
     throw new Error(
@@ -103,7 +155,7 @@ const exampleString = `123 328  51 64
   6 98  215 314
 *   +   *   + `;
 
-const example = parseInputString(exampleString);
+const example = parseInputStringHuman(exampleString);
 assertEquals(example[3], ["*", 123, 45, 6]);
 assertEquals(example[2], ["+", 328, 64, 98]);
 assertEquals(example[1], ["*", 51, 387, 215]);
@@ -134,9 +186,11 @@ assertEquals(
   39,
 );
 
-console.log(
-  sumEquationResults(parseInputString(Deno.readTextFileSync("dec-6.txt"))),
+const equations = parseEquationsAsCephalopod(
+  Deno.readTextFileSync("dec-6.txt"),
 );
+console.log(equations.slice(0, 3));
+console.log(sumEquationResults(equations));
 
 function isOperationSymbol(a: unknown): a is OperationSymbol {
   return a === "*" || a === "+";
