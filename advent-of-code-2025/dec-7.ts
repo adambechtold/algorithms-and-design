@@ -30,17 +30,26 @@ function parseInputStringIntoGrid(input: string): Grid {
   return input.split("\n").map((line) => line.split("") as GridRow);
 }
 
-function solveGrid(grid: Grid): number {
+function solveGridSplits(grid: Grid): number {
   if (grid.length < 1) throw new Error("Grid is too small");
   const startingY = 1;
 
   const startingX = indexOfStartPositionInStartingRow(grid[0]);
-  console.log("starting x", startingX);
   if (!startingX) throw new Error("Did not find S in starting row");
 
   const history = new PositionCheckHistory();
-
   return countSplits(grid, [startingX, startingY], history);
+}
+
+function solveGridTimelines(grid: Grid): number {
+  if (grid.length < 1) throw new Error("Grid is too small");
+  const startingY = 1;
+
+  const startingX = indexOfStartPositionInStartingRow(grid[0]);
+  if (!startingX) throw new Error("Did not find S in starting row");
+
+  const history = new PositionCheckHistory();
+  return countTimelines(grid, [startingX, startingY], history);
 }
 
 function countSplits(
@@ -48,7 +57,7 @@ function countSplits(
   [x, y]: Position,
   history: PositionCheckHistory,
 ): number {
-  console.log(compactGridIntoString(grid, history, [x, y]), [x, y]);
+  //console.log(compactGridIntoString(grid, history, [x, y]), [x, y]);
   //waitForUserToPressKey("c", "continue");
   history.addPosition([x, y]);
 
@@ -58,10 +67,8 @@ function countSplits(
     history,
   );
   if (nextYIndexOfSplitter === null) {
-    console.log(`Found buttom of grid at ${x}, ${y}`);
     return 0;
   }
-  console.log("Found splitter at ", [x, nextYIndexOfSplitter]);
 
   const leftPos: Position = [x - 1, nextYIndexOfSplitter];
   const rightPos: Position = [x + 1, nextYIndexOfSplitter];
@@ -69,15 +76,14 @@ function countSplits(
     canExploreSplitsFromPos(grid, leftPos, history),
     canExploreSplitsFromPos(grid, rightPos, history),
   ];
-  let splitMessage = "";
-  splitMessage += shouldCountLeft ? "✅ Left" : "❌ Left";
-  splitMessage += shouldCountRight ? " Right ✅" : " Right ❌";
-  console.log(splitMessage);
+  //let splitMessage = "";
+  //splitMessage += shouldCountLeft ? "✅ Left" : "❌ Left";
+  //splitMessage += shouldCountRight ? " Right ✅" : " Right ❌";
+  //console.log(splitMessage);
 
-  const alreadHitThisSplitter = history.haveCheckedPostion(leftPos) &&
-    history.haveCheckedPostion(rightPos);
+  const alreadHitThisSplitter = history.hasCheckedPosition(leftPos) &&
+    history.hasCheckedPosition(rightPos);
   if (alreadHitThisSplitter) {
-    console.log("alreadHitThisSplitter, ignore it");
     return 0;
   }
 
@@ -91,21 +97,70 @@ function countSplits(
   return 1 + splitsFromLeftSide + splitsFromRightSide;
 }
 
+function countTimelines(
+  grid: Grid,
+  [x, y]: Position,
+  history: PositionCheckHistory,
+): number {
+  if (
+    history.hasCheckedPosition([x, y]) &&
+    history.getValueAtPosition([x, y]) !== undefined
+  ) {
+    return history.getValueAtPosition([x, y]) as number;
+  }
+
+  //console.log(compactGridIntoString(grid, history, [x, y]));
+
+  const nextYIndexOfSplitter = findYIndexOfNextSplitterInclStartingPosition(
+    grid,
+    [x, y],
+    history,
+  );
+  if (nextYIndexOfSplitter === null) {
+    return 1;
+  }
+
+  const leftPos: Position = [x - 1, nextYIndexOfSplitter];
+  const rightPos: Position = [x + 1, nextYIndexOfSplitter];
+  const [shouldCountLeft, shouldCountRight] = [
+    canExploreTimelinesFromPos(grid, leftPos),
+    canExploreTimelinesFromPos(grid, rightPos),
+  ];
+
+  const splitsFromLeftSide = shouldCountLeft
+    ? history.getValueAtPosition(leftPos) ??
+      countTimelines(grid, leftPos, history)
+    : 0;
+  history.addPosition(leftPos, splitsFromLeftSide);
+  const splitsFromRightSide = shouldCountRight
+    ? history.getValueAtPosition(rightPos) ??
+      countTimelines(grid, rightPos, history)
+    : 0;
+  history.addPosition(rightPos, splitsFromRightSide);
+
+  return splitsFromLeftSide + splitsFromRightSide;
+}
+
 class PositionCheckHistory {
-  private hasCheckedPositions: Set<string>;
+  private storedValues: Map<string, number | undefined>;
 
   constructor() {
-    this.hasCheckedPositions = new Set<string>();
+    this.storedValues = new Map<string, number>();
   }
 
-  public addPosition(pos: Position) {
+  public addPosition(pos: Position, value?: number) {
     const key = PositionCheckHistory.buildKeyFromPosition(pos);
-    this.hasCheckedPositions.add(key);
+    this.storedValues.set(key, value);
   }
 
-  public haveCheckedPostion(pos: Position) {
+  public hasCheckedPosition(pos: Position) {
     const key = PositionCheckHistory.buildKeyFromPosition(pos);
-    return this.hasCheckedPositions.has(key);
+    return this.storedValues.has(key);
+  }
+
+  public getValueAtPosition(pos: Position) {
+    const key = PositionCheckHistory.buildKeyFromPosition(pos);
+    return this.storedValues.get(key);
   }
 
   private static buildKeyFromPosition(position: Position): string {
@@ -138,7 +193,15 @@ function canExploreSplitsFromPos(
   pos: Position,
   history: PositionCheckHistory,
 ) {
-  return isPositionWithinBounds(grid, pos) && !history.haveCheckedPostion(pos);
+  return isPositionWithinBounds(grid, pos) &&
+    !history.hasCheckedPosition(pos);
+}
+
+function canExploreTimelinesFromPos(
+  grid: Grid,
+  pos: Position,
+) {
+  return isPositionWithinBounds(grid, pos);
 }
 
 function findYIndexOfNextSplitterInclStartingPosition(
@@ -202,10 +265,10 @@ function compactGridIntoString(
     let rowStr = "";
     for (let x = 0; x < grid[0].length; x++) {
       if (pos && x === pos[0] && y === pos[1]) {
-        rowStr += "*";
+        rowStr += "👨‍🚀";
         continue;
       }
-      const cellStr = history.haveCheckedPostion([x, y]) ? "|" : grid[y][x];
+      const cellStr = history.hasCheckedPosition([x, y]) ? "|" : grid[y][x];
       rowStr += cellStr;
     }
     rowStr += "\n";
@@ -224,25 +287,45 @@ assertEquals(
 
 const simpleGrid = `.S.
 ...
-.^.`;
-
-//assertEquals(solveGrid(parseInputStringIntoGrid(simpleGrid)), 1);
+.^.
+...`;
+//assertEquals(solveGridSplits(parseInputStringIntoGrid(simpleGrid)), 2);
+//assertEquals(solveGridTimelines(parseInputStringIntoGrid(simpleGrid)), 2);
 
 const simpleGrid2 = `..S..
 .....
 .^...`;
-//assertEquals(solveGrid(parseInputStringIntoGrid(simpleGrid2)), 0);
+//assertEquals(solveGridSplits(parseInputStringIntoGrid(simpleGrid2)), 0);
+assertEquals(solveGridTimelines(parseInputStringIntoGrid(simpleGrid2)), 1);
 
 const simpleGrid3 = `..S..
 .....
 ..^..
 .....
 .^.^.`;
-//assertEquals(solveGrid(parseInputStringIntoGrid(simpleGrid3)), 3);
+assertEquals(solveGridSplits(parseInputStringIntoGrid(simpleGrid3)), 3);
+assertEquals(solveGridTimelines(parseInputStringIntoGrid(simpleGrid3)), 4);
 
-assertEquals(solveGrid(parseInputStringIntoGrid(exampleString)), 21);
+const simpleGrid4 = `...S...
+.......
+...^...
+.......
+..^.^..
+.......
+.^.^...
+.......
+..^....`;
+assertEquals(solveGridSplits(parseInputStringIntoGrid(simpleGrid4)), 6);
+
+assertEquals(solveGridSplits(parseInputStringIntoGrid(exampleString)), 21);
+assertEquals(
+  solveGridTimelines(parseInputStringIntoGrid(exampleString)),
+  40,
+);
 console.log(
-  solveGrid(parseInputStringIntoGrid(Deno.readTextFileSync("dec-7.txt"))),
+  solveGridTimelines(
+    parseInputStringIntoGrid(Deno.readTextFileSync("dec-7.txt")),
+  ),
 );
 
 function waitForUserToPressKey(actionKey: string, actionLabel: string) {
